@@ -3,7 +3,8 @@ import thunk from 'redux-thunk';
 import { 
   addExpense, 
   startAddExpense, 
-  editExpense, 
+  editExpense,
+  startEditExpense,
   removeExpense,
   startRemoveExpense,
   setExpenses,
@@ -30,17 +31,18 @@ test('should generate remove expense action object', () => {
   });
 });
 
-test('should remove from database', (done) => {
+test('should remove expense from database', (done) => {
   const store = createMockStore({});
-  store.dispatch(startRemoveExpense(expenses[0])).then(() => {
+  const id = expenses[0].id;
+  store.dispatch(startRemoveExpense({ id })).then(() => {
     const actions = store.getActions();
     expect(actions[0]).toEqual({
       type: 'REMOVE_EXPENSE',
-      id: expenses[0].id
+      id
     });
-    return database.ref(`expenses/${expenses[0].id}`).once('value');
+    return database.ref(`expenses/${id}`).once('value');
   }).then((snapshot) => {
-    expect(snapshot.val()).toBe(null);
+    expect(snapshot.val()).toBeFalsy();
     done();
   });
 });
@@ -54,6 +56,31 @@ test('should generate edit expense action object', () => {
       note: 'New Note Value'
     }
   })
+});
+
+test('should update expense in database', (done) => {
+  const store = createMockStore({});
+  const id = expenses[1].id;
+  const updates = {
+    amount: 3345345,
+    note: 'This the updated note'
+  };
+  store.dispatch(startEditExpense(id, updates)).then(() => {
+    const actions = store.getActions();
+    expect(actions[0]).toEqual({
+      type: 'EDIT_EXPENSE',
+      id,
+      updates
+    });
+    return database.ref(`expenses/${id}`).once('value');
+  }).then((snapshot) => {
+    expect(snapshot.val()).toEqual({
+      description: expenses[1].description,
+      createdAt: expenses[1].createdAt,
+      ...updates
+    });
+    done();
+  });  
 });
 
 test('should generate add expense action object with provided values', () => {
