@@ -12,5 +12,5 @@ test('should set uid on login', () => {
 
 test('should clear uid on logout', () => {
   const state = authReducer({ uid: '123asdsdfsdf1' }, { type: 'LOGOUT' });
-  expect(state.uid).toEqual({});
+  expect(state).toEqual({});
 });
